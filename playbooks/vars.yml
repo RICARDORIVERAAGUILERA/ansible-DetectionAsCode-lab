@@ -1,0 +1,9 @@
+---
+kibana_url: "{{ lookup('env', 'KIBANA_URL') | regex_replace('/+$', '') }}"
+kibana_space: "{{ lookup('env', 'KIBANA_SPACE') }}"
+kibana_api_key: "{{ lookup('env', 'KIBANA_API_KEY') }}"
+kibana_ca_path: "{{ lookup('env', 'KIBANA_CA_PATH') }}"
+rules_endpoint: "{{ kibana_url }}/s/{{ kibana_space | urlencode }}/api/detection_engine/rules"
+ansible_python_interpreter: "{{ ansible_playbook_python }}"
+allow_enabled_rules: false
+managed_fields: [rule_id, name, description, type, language, query, index, severity, risk_score, interval, from, to, enabled, tags]

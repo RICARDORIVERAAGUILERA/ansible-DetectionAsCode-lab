@@ -1,0 +1,10 @@
+---
+- name: Require explicit live connection settings
+  ansible.builtin.assert:
+    that:
+      - kibana_url is match('^https://[^/?#@]+(?::[0-9]+)?(?:/[^?#]*)?$')
+      - kibana_space is match('^[a-z0-9_-]+$')
+      - kibana_api_key | length > 0
+      - not ansible_check_mode
+    fail_msg: Set KIBANA_URL (HTTPS), KIBANA_SPACE and KIBANA_API_KEY. Use validate.yml for offline checks; live playbooks do not support --check.
+  no_log: true

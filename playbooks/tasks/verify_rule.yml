@@ -1,0 +1,15 @@
+---
+- name: Read deployed rule
+  ansible.builtin.include_tasks: read.yml
+- name: Require rule to exist
+  ansible.builtin.assert:
+    that: current_rule.status == 200
+    fail_msg: "Rule {{ rule.rule_id }} was not found in the selected Space."
+- name: Check managed fields against source
+  ansible.builtin.assert:
+    that: current_rule.json[item.key] == item.value
+    fail_msg: "Managed field {{ item.key }} differs for {{ rule.rule_id }}."
+    quiet: true
+  loop: "{{ rule | dict2items }}"
+  loop_control:
+    label: "{{ rule.rule_id }} / {{ item.key }}"

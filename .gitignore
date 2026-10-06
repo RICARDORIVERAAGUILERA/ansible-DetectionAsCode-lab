@@ -1,0 +1,10 @@
+# Local configuration, credentials and rule snapshots
+.env
+.env.*
+!.env.example
+*.local.yml
+secrets/
+backups/
+.vault-password*
+*.retry
+__pycache__/

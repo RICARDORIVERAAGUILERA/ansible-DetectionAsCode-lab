@@ -1,0 +1,17 @@
+---
+- name: Verify rules in Kibana
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files: [vars.yml]
+  tasks:
+    - name: Load and validate source rules
+      ansible.builtin.include_tasks: tasks/load.yml
+    - name: Validate connection settings
+      ansible.builtin.include_tasks: tasks/connection.yml
+    - name: Verify each rule
+      ansible.builtin.include_tasks: tasks/verify_rule.yml
+      loop: "{{ rules }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule.rule_id }}"

@@ -1,0 +1,35 @@
+---
+- name: Deploy custom detection rules
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files: [vars.yml]
+  tasks:
+    - name: Load and validate source rules
+      ansible.builtin.include_tasks: tasks/load.yml
+    - name: Validate connection settings
+      ansible.builtin.include_tasks: tasks/connection.yml
+    - name: Require explicit opt-in for enabled rules
+      ansible.builtin.assert:
+        that: allow_enabled_rules | bool or not (item.enabled | bool)
+        fail_msg: Review the rule before setting allow_enabled_rules=true.
+      loop: "{{ rules }}"
+      loop_control:
+        label: "{{ item.rule_id }}"
+    - name: Create unique local backup directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: ansible-dac-backup-
+      register: backup_location
+    - name: Record backup location
+      ansible.builtin.set_fact:
+        backup_dir: "{{ backup_location.path }}"
+    - name: Show local backup directory
+      ansible.builtin.debug:
+        var: backup_dir
+    - name: Deploy each rule
+      ansible.builtin.include_tasks: tasks/deploy_rule.yml
+      loop: "{{ rules }}"
+      loop_control:
+        loop_var: rule
+        label: "{{ rule.rule_id }}"

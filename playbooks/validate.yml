@@ -1,0 +1,9 @@
+---
+- name: Validate detection rules offline
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files: [vars.yml]
+  tasks:
+    - name: Load and validate source rules
+      ansible.builtin.include_tasks: tasks/load.yml

@@ -1,0 +1,18 @@
+---
+- name: Read rule by stable identifier
+  ansible.builtin.uri:
+    url: "{{ rules_endpoint }}?rule_id={{ rule.rule_id | urlencode }}"
+    method: GET
+    headers:
+      Authorization: "ApiKey {{ kibana_api_key }}"
+      kbn-xsrf: ansible-dac
+    validate_certs: true
+    ca_path: "{{ kibana_ca_path | default(omit, true) }}"
+    follow_redirects: none
+    use_netrc: false
+    return_content: true
+    status_code: [200, 404]
+    timeout: 30
+  register: current_rule
+  changed_when: false
+  no_log: true

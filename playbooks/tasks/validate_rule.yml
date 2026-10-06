@@ -1,0 +1,31 @@
+---
+- name: Require the supported custom query rule schema
+  ansible.builtin.assert:
+    that:
+      - rule is mapping
+      - managed_fields | difference(rule.keys() | list) | length == 0
+      - rule.keys() | list | difference(managed_fields) | length == 0
+    fail_msg: Use the exact fields from the example. This starter supports custom KQL query rules only.
+- name: Validate rule values
+  ansible.builtin.assert:
+    that:
+      - rule.rule_id is string and rule.rule_id is match('^[A-Za-z0-9_-]+$')
+      - rule.name is string and rule.name | length > 0
+      - rule.description is string and rule.description | length > 0
+      - rule.type == 'query'
+      - rule.language == 'kuery'
+      - rule.query is string and rule.query | length > 0
+      - rule.index is sequence and rule.index is not string and rule.index | length > 0
+      - rule.index | select('string') | list | length == rule.index | length
+      - rule.index | select('equalto', '') | list | length == 0
+      - rule.severity in ['low', 'medium', 'high', 'critical']
+      - rule.risk_score is integer and rule.risk_score is not boolean
+      - rule.risk_score >= 0 and rule.risk_score <= 100
+      - rule.interval is string and rule.interval is match('^[1-9][0-9]*[smhd]$')
+      - rule['from'] is string and rule['from'] is match('^now-[1-9][0-9]*[smhd]$')
+      - rule.to == 'now'
+      - rule.enabled is boolean
+      - rule.tags is sequence and rule.tags is not string
+      - rule.tags | select('string') | list | length == rule.tags | length
+      - "'ManagedBy:ansible-dac' in rule.tags"
+    fail_msg: Invalid rule values. See the example and README.

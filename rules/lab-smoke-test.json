@@ -1,0 +1,21 @@
+{
+  "rule_id": "ansible-dac-lab-smoke-test",
+  "name": "LAB - Detection as Code smoke test",
+  "description": "Disabled example matching a dedicated synthetic event. Review index and query before enabling.",
+  "type": "query",
+  "language": "kuery",
+  "query": "event.dataset : \"dac.smoke_test\"",
+  "index": [
+    "logs-dac.smoke_test-*"
+  ],
+  "severity": "low",
+  "risk_score": 21,
+  "interval": "5m",
+  "from": "now-6m",
+  "to": "now",
+  "enabled": false,
+  "tags": [
+    "ManagedBy:ansible-dac",
+    "Environment:lab"
+  ]
+}

@@ -1,0 +1,21 @@
+---
+- name: Find rule definitions
+  ansible.builtin.set_fact:
+    rule_files: "{{ query('ansible.builtin.fileglob', playbook_dir + '/../rules/*.json') | sort }}"
+    rules: []
+- name: Require at least one rule
+  ansible.builtin.assert:
+    that: rule_files | length > 0
+    fail_msg: Add at least one JSON rule to rules/.
+- name: Load JSON definitions
+  ansible.builtin.set_fact:
+    rules: "{{ rules + [lookup('ansible.builtin.file', item) | from_json] }}"
+  loop: "{{ rule_files }}"
+- name: Validate each definition
+  ansible.builtin.include_tasks: validate_rule.yml
+  loop: "{{ rules }}"
+  loop_control:
+    loop_var: rule
+- name: Reject duplicate stable identifiers
+  ansible.builtin.assert:
+    that: (rules | map(attribute='rule_id') | unique | length) == (rules | length)

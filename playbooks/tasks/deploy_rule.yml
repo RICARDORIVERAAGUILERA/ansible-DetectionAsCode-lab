@@ -1,0 +1,47 @@
+---
+- name: Read current rule
+  ansible.builtin.include_tasks: read.yml
+- name: Refuse to adopt unrelated or prebuilt rules
+  ansible.builtin.assert:
+    that:
+      - "'ManagedBy:ansible-dac' in current_rule.json.tags | default([])"
+      - not (current_rule.json.immutable | default(false) | bool)
+      - (current_rule.json.rule_source | default({})).get('type', 'internal') == 'internal'
+      - current_rule.json.type == rule.type
+    fail_msg: Existing rule is outside this starter's management scope.
+  when: current_rule.status == 200
+- name: Reset comparison
+  ansible.builtin.set_fact:
+    rule_changed: "{{ current_rule.status == 404 }}"
+- name: Compare only managed fields
+  ansible.builtin.set_fact:
+    rule_changed: true
+  loop: "{{ rule | dict2items }}"
+  when: current_rule.status == 200 and current_rule.json.get(item.key) != item.value
+- name: Save original rule before updating
+  ansible.builtin.copy:
+    content: "{{ current_rule.json | to_nice_json }}"
+    dest: "{{ backup_dir }}/{{ rule.rule_id }}.json"
+    mode: '0600'
+  when: current_rule.status == 200 and rule_changed | bool
+  no_log: true
+- name: Create or patch changed rule
+  ansible.builtin.uri:
+    url: "{{ rules_endpoint }}"
+    method: "{{ 'POST' if current_rule.status == 404 else 'PATCH' }}"
+    headers:
+      Authorization: "ApiKey {{ kibana_api_key }}"
+      kbn-xsrf: ansible-dac
+    body_format: json
+    body: "{{ rule }}"
+    validate_certs: true
+    ca_path: "{{ kibana_ca_path | default(omit, true) }}"
+    follow_redirects: none
+    use_netrc: false
+    status_code: [200, 201]
+    timeout: 30
+  when: rule_changed | bool
+  changed_when: true
+  no_log: true
+- name: Verify persisted definition
+  ansible.builtin.include_tasks: verify_rule.yml
