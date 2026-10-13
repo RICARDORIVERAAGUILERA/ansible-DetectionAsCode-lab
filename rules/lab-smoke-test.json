@@ -9,7 +9,7 @@
     "logs-dac.smoke_test-*"
   ],
   "severity": "low",
-  "risk_score": 21,
+  "risk_score": 88,
   "interval": "5m",
   "from": "now-6m",
   "to": "now",
