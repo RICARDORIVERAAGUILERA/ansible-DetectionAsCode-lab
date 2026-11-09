@@ -8,3 +8,4 @@ backups/
 .vault-password*
 *.retry
 __pycache__/
+*.hex
