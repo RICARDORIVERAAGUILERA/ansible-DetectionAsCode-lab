@@ -12,12 +12,24 @@
   when: current_rule.status == 200
 - name: Reset comparison
   ansible.builtin.set_fact:
-    rule_changed: "{{ current_rule.status == 404 }}"
+    rule_changes: []
+    change_lines: []
+    revision_before: "{{ current_rule.json.revision | default(none) if current_rule.status == 200 else none }}"
 - name: Compare only managed fields
   ansible.builtin.set_fact:
-    rule_changed: true
+    rule_changes: "{{ rule_changes + [{'field': item.key, 'before': current_rule.json.get(item.key), 'after': item.value}] }}"
+    change_lines: "{{ change_lines + [item.key ~ ': ' ~ (current_rule.json.get(item.key) | to_json) ~ ' -> ' ~ (item.value | to_json)] }}"
   loop: "{{ rule | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
   when: current_rule.status == 200 and current_rule.json.get(item.key) != item.value
+- name: Decide action
+  ansible.builtin.set_fact:
+    rule_action: "{{ 'create' if current_rule.status == 404 else ('update' if rule_changes | length > 0 else 'unchanged') }}"
+    rule_changed: "{{ current_rule.status == 404 or rule_changes | length > 0 }}"
+- name: Show planned change
+  ansible.builtin.debug:
+    msg: "{{ [rule.rule_id ~ ': ' ~ rule_action | upper ~ ' from Git ' ~ git_commit.short] + change_lines }}"
 - name: Save original rule before updating
   ansible.builtin.copy:
     content: "{{ current_rule.json | to_nice_json }}"
@@ -45,3 +57,30 @@
   no_log: true
 - name: Verify persisted definition
   ansible.builtin.include_tasks: verify_rule.yml
+- name: Append deployment audit record
+  ansible.builtin.lineinfile:
+    path: "{{ deploy_log }}"
+    create: true
+    mode: '0600'
+    insertafter: EOF
+    line: >-
+      {{ {
+        'timestamp': now(utc=true).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'operator': lookup('env', 'USER'),
+        'controller': inventory_hostname,
+        'git_commit': git_commit.full,
+        'git_author': git_commit.author,
+        'git_subject': git_commit.subject,
+        'kibana_url': kibana_url,
+        'kibana_space': kibana_space,
+        'rule_id': rule.rule_id,
+        'kibana_id': current_rule.json.id | default(none),
+        'action': rule_action,
+        'changes': rule_changes,
+        'revision_before': (revision_before | int) if revision_before | string | regex_search('^[0-9]+$') else none,
+        'revision_after': current_rule.json.revision | default(none),
+        'updated_by': current_rule.json.updated_by | default(none),
+        'updated_at': current_rule.json.updated_at | default(none),
+        'backup': (backup_dir ~ '/' ~ rule.rule_id ~ '.json') if rule_action == 'update' else none
+      } | to_json }}
+  changed_when: false

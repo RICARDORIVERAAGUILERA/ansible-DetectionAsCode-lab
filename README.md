@@ -101,6 +101,23 @@ ansible-playbook -i localhost, playbooks/deploy.yml -e allow_enabled_rules=true
 Check rule execution status and expected alerts in Kibana. Enabling is explicit;
 the starter does not create test events, indices, or data integrations.
 
+## Traceability
+
+`deploy.yml` refuses to run while `rules/` has uncommitted changes, so Kibana only
+receives what is in Git. Each run prints the action per rule (CREATE, UPDATE,
+UNCHANGED) and the changed fields, e.g. `risk_score: 48 -> 63`, and appends one
+JSON line per rule to `~/ansible-dac-deployments.jsonl` (override with
+`-e deploy_log=...`): timestamp, operator, Git commit/author/subject, Kibana
+space and rule id, changes, revision before/after, `updated_by` and backup path.
+
+Trace a change end to end: GitHub PR and commit -> deployment log entry with the
+same commit -> Kibana rule revision and "updated by" in the rule details.
+
+```bash
+git log --oneline -- rules/
+tail -n 5 ~/ansible-dac-deployments.jsonl | python3 -m json.tool --json-lines
+```
+
 ## Recovery and change control
 
 Use a reviewed Git revert of a rule change, then deploy again to restore managed

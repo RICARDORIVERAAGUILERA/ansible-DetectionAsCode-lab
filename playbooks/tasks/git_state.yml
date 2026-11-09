@@ -1,0 +1,27 @@
+---
+- name: Read the Git commit being deployed
+  ansible.builtin.command:
+    cmd: git log -1 --format=%H%n%h%n%an%n%s
+    chdir: "{{ playbook_dir }}/.."
+  register: git_log
+  changed_when: false
+  check_mode: false
+- name: Look for uncommitted rule changes
+  ansible.builtin.command:
+    cmd: git status --porcelain -- rules
+    chdir: "{{ playbook_dir }}/.."
+  register: git_dirty
+  changed_when: false
+  check_mode: false
+- name: Record Git state
+  ansible.builtin.set_fact:
+    git_commit:
+      full: "{{ git_log.stdout_lines[0] }}"
+      short: "{{ git_log.stdout_lines[1] }}"
+      author: "{{ git_log.stdout_lines[2] }}"
+      subject: "{{ git_log.stdout_lines[3] | default('') }}"
+- name: Deploy only what is committed in Git
+  ansible.builtin.assert:
+    that: git_dirty.stdout | length == 0
+    fail_msg: "Uncommitted changes in rules/: {{ git_dirty.stdout_lines }}. Change rules through a reviewed commit, then git pull."
+    success_msg: "Deploying Git {{ git_commit.short }} ({{ git_commit.author }}): {{ git_commit.subject }}"

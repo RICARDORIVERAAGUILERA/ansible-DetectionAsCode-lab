@@ -7,6 +7,8 @@
   tasks:
     - name: Load and validate source rules
       ansible.builtin.include_tasks: tasks/load.yml
+    - name: Read Git state
+      ansible.builtin.include_tasks: tasks/git_state.yml
     - name: Validate connection settings
       ansible.builtin.include_tasks: tasks/connection.yml
     - name: Require explicit opt-in for enabled rules

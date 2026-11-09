@@ -7,4 +7,4 @@
       - kibana_api_key | length > 0
       - not ansible_check_mode
     fail_msg: Set KIBANA_URL (HTTPS), KIBANA_SPACE and KIBANA_API_KEY. Use validate.yml for offline checks; live playbooks do not support --check.
-  no_log: true
+    quiet: true
