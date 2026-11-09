@@ -1,0 +1,24 @@
+{
+  "rule_id": "lab-powershell-encoded-command",
+  "name": "LAB - PowerShell EncodedCommand execution",
+  "description": "Detects PowerShell started with an encoded command (-EncodedCommand / -enc / -e), a common technique to hide script content (MITRE T1059.001, T1027). LAB PoC rule deployed disabled through Git and Ansible.",
+  "type": "query",
+  "language": "kuery",
+  "query": "event.category : \"process\" and event.type : \"start\" and process.name : (\"powershell.exe\" or \"pwsh.exe\") and process.args : (\"-e\" or \"-ec\" or \"-enc\" or \"-Enc\" or \"-encodedcommand\" or \"-EncodedCommand\")",
+  "index": [
+    "logs-endpoint.events.process-*",
+    "logs-windows.sysmon_operational-*"
+  ],
+  "severity": "medium",
+  "risk_score": 47,
+  "interval": "5m",
+  "from": "now-6m",
+  "to": "now",
+  "enabled": false,
+  "tags": [
+    "ManagedBy:ansible-dac",
+    "Environment:lab",
+    "MITRE:T1059.001",
+    "MITRE:T1027"
+  ]
+}
