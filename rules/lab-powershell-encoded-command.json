@@ -10,7 +10,7 @@
     "logs-windows.sysmon_operational-*"
   ],
   "severity": "medium",
-  "risk_score": 47,
+  "risk_score": 73,
   "interval": "5m",
   "from": "now-6m",
   "to": "now",
