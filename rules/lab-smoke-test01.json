@@ -1,6 +1,6 @@
 {
-  "rule_id": "ansible-dac-lab-smoke-test-0q",
-  "name": "LAB - Detection as Code smoke test 02",
+  "rule_id": "ansible-dac-lab-smoke-test-01",
+  "name": "LAB - Detection as Code smoke test 01",
   "description": "test rule",
   "type": "query",
   "language": "kuery",
