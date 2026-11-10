@@ -1,0 +1,21 @@
+{
+  "rule_id": "ansible-dac-lab-smoke-test-01",
+  "name": "LAB - Detection as Code smoke test 02",
+  "description": "test rule",
+  "type": "query",
+  "language": "kuery",
+  "query": "event.dataset : \"dac.smoke_test\"",
+  "index": [
+    "logs-dac.smoke_test-*"
+  ],
+  "severity": "low",
+  "risk_score": 28,
+  "interval": "5m",
+  "from": "now-6m",
+  "to": "now",
+  "enabled": false,
+  "tags": [
+    "ManagedBy:ansible-dac",
+    "Environment:lab"
+  ]
+}
